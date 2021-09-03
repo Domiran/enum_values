@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vector>
 #include <string>
 #include <filesystem>
@@ -159,7 +160,7 @@ string read_file(string const& path)
     auto err = fopen_s(&f, path.c_str(), "rb");
     if (err)
     {
-        cerr << "Reading file \"" + path + "\" got error " + to_string(err) + ".";
+        std::cerr << "Reading file \"" + path + "\" got error " + to_string(err) + ".";
         return string();
     }
     auto read_size = fread(file_data.get(), 1, file_size, f);

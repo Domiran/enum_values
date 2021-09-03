@@ -1,3 +1,6 @@
+#pragma once
+#include <unordered_map>
+#include "spliterator.h"
 template<class _ETy>
 requires std::is_enum_v<_ETy>
 class enum_static
@@ -261,52 +264,3 @@ public:
 		return enum_static<_ETy>::from_flag_string(_value, text, separator);
 	}
 };
-
-void that(myvalues v)
-{
-	v = myvalues::also_three;
-}
-
-int main()
-{
-	enum_value<myvalues> val1;
-	enum_value<myvalues> val2;
-
-	val1 = myvalues::two;
-	val1.data() = 10;
-	val1.clear();
-	auto ok = (val1.data() == 5);
-	ok = (val1 == val2);
-	ok = (val1 == myvalues::three);
-	val1 = val2;
-	val2.data() = 5;
-	*val1 = myvalues::three;
-
-	auto c = val1.data();
-	std::cout << c << std::endl;
-
-	for (auto v : enum_static<myvalues>::iterable_by_name())
-	{
-		std::cout << v.second << std::endl;
-	}
-
-	enum_static<myvalues>::_UTy
-
-		val1.from_string("zero");
-	std::cout << val1.to_string() << std::endl;
-
-	auto unknowns = val1.from_flag_string("one!+!two!+!four", "!+!");
-	assert(unknowns.empty());
-
-	unknowns = val1.from_flag_string("one+two+four", "!+!");
-	assert(unknowns == "one+two+four");
-
-	unknowns = val1.from_flag_string("eight+sixteen+two+four+thirty-two", "+");
-	assert(unknowns == "eight+sixteen+thirty-two");
-
-	std::cout << val1.to_flag_string("+") << std::endl;
-
-	that(*val1);
-
-	return 0;
-}

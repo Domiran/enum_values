@@ -142,6 +142,7 @@
   <ItemGroup>
     <ClCompile Include="enum_values.cpp" />
     <ClCompile Include="spliterator.cpp" />
+    <ClCompile Include="tester.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="enum_values.h" />
