@@ -28,7 +28,7 @@ namespace MyNamespace
 
 It does this by creating a compilable cpp file intended to be included directly in your application that are linked to the `enum_value` and `enum_static` classes. Forward declarations of all enums it captures are included. Which one you use ~~really depends if you prefer a little C# in your life~~ is a matter of preference.
 
-Unlike some other enum reflection solutions, this does not require much/any editing of your existing code and has no size or syntax limitations.
+Unlike some other enum reflection solutions, this does not require much/any editing of your existing code and has no size or syntax limitations. (However, its effectiveness is entirely dependent on the parser. The initial release does not have a very robust C++ syntax parser.)
 
 # Example
 
