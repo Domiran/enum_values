@@ -146,7 +146,7 @@ struct enum_data
         }
         else
         {
-            return nspace + ":" + name;
+            return nspace + "::" + name;
         }
     }
 };
@@ -304,14 +304,16 @@ string create_enum_map_data(enum_data const& data)
     // and the reverse
     string map_text;
 
-    map_text.append("std::unordered_map<" + data.type + ", std::string> enum_flags<" + data.name + ">::value_to_name = {\r");
+    map_text.append("enum class " + data.full_name() + " : " + data.type + ";\r");
+
+    map_text.append("const std::unordered_map<" + data.type + ", std::string> enum_static<" + data.name + ">::value_to_name = {\r");
 
     for (auto& enum_value : data.values)
     {
         map_text.append("\t{ " + to_string(enum_value.value) + ", \"" + enum_value.name + "\" }, \r");
     }
     map_text.append(" };\r");
-    map_text.append("std::unordered_map<std::string, " + data.type + "> enum_flags<" + data.name + ">::name_to_value = {\r");
+    map_text.append("const std::unordered_map<std::string, " + data.type + "> enum_static<" + data.name + ">::name_to_value = {\r");
 
     for (auto& enum_value : data.values)
     {
@@ -370,7 +372,7 @@ string create_cpp_file_text(vector<string> const& all_maps)
 {
     string text;
 
-    text.append("#include \"enum_flags.h\"\r\r");
+    text.append("#include <unordered_map>\r#include \"enum_values.h\"\r\r");
 
     for (auto& m : all_maps)
     {
@@ -404,7 +406,7 @@ int main(int argc, char** argv)
 
     for (auto& entry : std::filesystem::directory_iterator(code_path))
     {
-        if (entry.is_regular_file() &&
+        if (entry.is_regular_file() && (!entry.path().string().ends_with("enum_values.cpp")) &&
             (entry.path().extension().string().ends_with(".cpp")) || entry.path().extension().string().ends_with(".h"))
         {
             cout << "[Source] Opening " << entry.path().string() << "." << endl;
