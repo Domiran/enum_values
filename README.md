@@ -1,6 +1,8 @@
 # enum_values
 Yet another post-build step and class to bring reflection to C++ enumerations!
 
+*Fair warning: this project has not undergone much testing (yet?). I have also not used it in a project (also yet?).*
+
 # Description
 
 This project consists of two parts: a pre-build step called `enum_reader` and two classes: `enum_value` and `enum_static`.
@@ -24,7 +26,9 @@ namespace MyNamespace
 }
 ```
 
-It does this by creating a compilable cpp file intended to be included directly in your application that are linked to the `enum_value` and `enum_static` classes. Forward declarations of all enums it captures are included.
+It does this by creating a compilable cpp file intended to be included directly in your application that are linked to the `enum_value` and `enum_static` classes. Forward declarations of all enums it captures are included. Which one you use ~~really depends if you prefer a little C# in your life~~ is really a matter of preference.
+
+Unlike some other enum reflection solutions, this does not require much/any editing of your existing code and has no size or syntax limitations.
 
 # Example
 
@@ -58,7 +62,9 @@ const std::unordered_map<std::string, int> enum_static<MyNamespace::theirvalues>
 
 # Usage
 
-`enum_static` contains static versions of common enum operations:
+There are two methods of using *enum_values*: the static `enum_static` class or the enum wrapper `enum_value`.
+
+`enum_static` provides static versions of common enum operations:
 * `has_flag`
 * `flag_set`
 * `flag_remove`
@@ -121,7 +127,7 @@ namespace espace
 std::cout << enum_static<myvalues>::description() << std::endl;
 std::cout << enum_static<espace::theirvalues>::description() << std::endl;
 
-// using the enum_value class to hold values (useful for flags
+// using the enum_value class to hold values (useful for flags)
 enum_value<myvalues> val1;
 enum_value<myvalues> val2;
 
