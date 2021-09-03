@@ -11,7 +11,7 @@ const string enum_header_name_text = R"(enum class ([A-z]+))";
 const string enum_header_type_text = R"((:|: )([A-z]+))"; // 2nd group is what we take
 const string enum_header_nspace_text = R"(\/\/ns@([A-z]+))";
 
-const string enum_value_name_text = R"(^\s([A-z_]+))";
+const string enum_value_name_text = R"(^[\s]*([A-z_]+))";
 const string enum_value_expr_text = R"(=([0-9A-z\-| ]+))";
 const string enum_value_comment_text = R"(\/\/([ A-z0-9!?]+))";
 
@@ -304,16 +304,25 @@ string create_enum_map_data(enum_data const& data)
     // and the reverse
     string map_text;
 
-    map_text.append("enum class " + data.full_name() + " : " + data.type + ";\r");
+    if (data.nspace.empty())
+    {
+        map_text.append("enum class " + data.name + " : " + data.type + ";\r");
+    }
+    else
+    {
+        map_text.append("namespace " + data.nspace + "\r{\r\tenum class " + data.name + " : " + data.type + "; \r}\r");
+    }
+   
+    map_text.append("const std::string enum_static<" + data.full_name() + ">::enum_desc = \"" + data.comment + "\";\r");
 
-    map_text.append("const std::unordered_map<" + data.type + ", std::string> enum_static<" + data.name + ">::value_to_name = {\r");
+    map_text.append("const std::unordered_map<" + data.type + ", std::string> enum_static<" + data.full_name() + ">::value_to_name = {\r");
 
     for (auto& enum_value : data.values)
     {
         map_text.append("\t{ " + to_string(enum_value.value) + ", \"" + enum_value.name + "\" }, \r");
     }
     map_text.append(" };\r");
-    map_text.append("const std::unordered_map<std::string, " + data.type + "> enum_static<" + data.name + ">::name_to_value = {\r");
+    map_text.append("const std::unordered_map<std::string, " + data.type + "> enum_static<" + data.full_name() + ">::name_to_value = {\r");
 
     for (auto& enum_value : data.values)
     {

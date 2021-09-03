@@ -11,6 +11,7 @@ public:
 private:
 	static const std::unordered_map<_UTy, std::string> value_to_name;
 	static const std::unordered_map<std::string, _UTy> name_to_value;
+	static const std::string enum_desc;
 
 public:
 
@@ -19,9 +20,29 @@ public:
 		return value_to_name;
 	}
 
-	static const auto iterable_by_name()
+	static const auto iterable_by_names()
 	{
 		return value_to_name;
+	}
+
+	static const auto description()
+	{
+		return enum_desc;
+	}
+
+	static _ETy flag_set(_ETy value, _ETy flag)
+	{
+		return static_cast<_UTy>(value) | static_cast<_UTy>(flag);
+	}
+
+	static _ETy flag_remove(_ETy value, _ETy flag)
+	{
+		return static_cast<_UTy>(value) & ~static_cast<_UTy>(flag);
+	}
+
+	static _ETy flag_toggle(_ETy value, _ETy flag)
+	{
+		return static_cast<_UTy>(value) ^ static_cast<_UTy>(flag);
 	}
 
 	template<typename Ty>
@@ -154,12 +175,12 @@ public:
 
 	bool has_flag(_UTy other) const
 	{
-		return has_flag(_value, other);
+		return enum_static<_ETy>::has_flag(_value, other);
 	}
 
 	bool has_flag(_ETy other) const
 	{
-		return has_flag(other, static_cast<_UTy>(other));
+		return enum_static<_ETy>::has_flag(other, static_cast<_UTy>(other));
 	}
 
 	enum_value& operator=(const enum_value& other)
@@ -180,17 +201,17 @@ public:
 
 	void flag_set(_ETy flag)
 	{
-		_value |= static_cast<_UTy>(flag);
+		_value = enum_static<_ETy>::flag_set(_value, flag);
 	}
 
 	void flag_remove(_ETy flag)
 	{
-		_value &= ~static_cast<_UTy>(flag);
+		_value = enum_static<_ETy>::flag_remove(_value, flag);
 	}
 
 	void flag_toggle(_ETy flag)
 	{
-		_value ^= static_cast<_UTy>(flag);
+		_value = enum_static<_ETy>::flag_toggle(_value, flag);
 	}
 
 	enum_value& operator++()
