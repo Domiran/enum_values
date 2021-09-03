@@ -79,7 +79,9 @@ There are two methods of using *enum_values*: the static `enum_static` class or 
 * `enum_value` assignment and equality
 * Postfix and prefix increment and decrement
 * Overloaded `operator*`, returning enum value (non-const overload allows value to be directly changed)
-* `data()`, returning the value of the enum's underlying type (non-const overload allows value to be directly changed)
+* `data()`, returning the value of the enum's underlying type (non-const overload allows value to be directly changed
+
+The following code shows most of the features used as member functions.
 
 ```cpp
 // these values are used by those values, top kek!
@@ -188,6 +190,9 @@ foo(*val1);
 # Limitations
 
 The parser currently has the following limitations:
-* Any and all classes and namespaces required for a forward declaration are ignored. (Provide this information manually with the `//@ns` comment in the format shown.)
+* Any and all classes and namespaces required for a forward declaration are ignored.
+  * (Provide this information manually with the `//@ns` comment in the format shown.)
 * An alias will return the first value seen in the enum definition.
+  * (There does not seem to be any way in C++ to differentiate aliases from the enum value.)
 * Only single-term expressions will be evaluated. `two_and_three = two | three` will currently set the value to `-1`.
+  * (Eventually.)
