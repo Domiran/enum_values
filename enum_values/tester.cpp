@@ -1,38 +1,29 @@
-#include "enum_values.h"
 #include <assert.h>
 #include <functional>
 #include <iostream>
 #include <string>
 #include <string_view>
 
-// these values are used by those values, top kek!
-enum class myvalues
+namespace tester_ns
 {
-	zero = 0, // nope
-	one = 1,
-	two = 2,
 
-	// this is not the world we want to save!
-	three = 3,
-	also_three = three, //yay?
-	four = 4, //  ahh!
-	five = 5
-};
+	// these values are used by those values, top kek!
+	enum class myvalues
+	{
+		zero = 0, // nope
+		one = 1,
+		two = 2,
 
-enum class yourvalues : int
-{
-	zero, // nope
-	one,
-	two,
-	also_two = two, // does it work?
-	three, // ah!!
-	four,
-	five,
-};
+		// this is not the world we want to save!
+		three = 3,
+		also_three = three, //"(Also Three)" yay?
+		four = 4, //  ahh!
+		five = 5
+	};
 
-namespace espace
-{
-	enum class theirvalues : int //ns@espace
+	/* this is a longer comment
+	with lots of description ! */
+	enum class yourvalues : int
 	{
 		zero, // nope
 		one,
@@ -42,7 +33,30 @@ namespace espace
 		four,
 		five,
 	};
+
+	namespace espace
+	{
+		class myclass
+		{
+		public:
+			enum class theirvalues : int // prefix:espace::myclass
+			{
+				zero, // nope
+				one,
+				two,
+				also_two = two, // does it work?
+				three, // ah!!
+				four,
+				five,
+			};
+		};
+	}
 }
+
+#include "enum_values.h"
+
+using namespace tester_ns;
+
 
 void foo(myvalues v)
 {
@@ -53,11 +67,12 @@ int main()
 {
 	// get description
 	std::cout << enum_static<myvalues>::description() << std::endl;
-	std::cout << enum_static<espace::theirvalues>::description() << std::endl;
+	std::cout << enum_static<espace::myclass::theirvalues>::description() << std::endl;
 
-	// using the enum_value class to hold values (useful for flags
+	// using the enum_value class to hold values (useful for flags)
 	enum_value<myvalues> val1;
 	enum_value<myvalues> val2;
+	enum_value<yourvalues> val3;
 
 	// reset to 0
 	val1.clear();
@@ -87,9 +102,14 @@ int main()
 	std::cout << c << std::endl;
 
 	// iterate over full list of values
-	for (auto v : enum_static<myvalues>::iterable_by_names())
+	for (auto& v : enum_static<myvalues>::iterable())
 	{
-		std::cout << v.second << std::endl;
+		std::cout << v.as_number() << std::endl;
+	}
+
+	for (auto& v : enum_static<yourvalues>::iterable())
+	{
+		std::cout << v.as_string() << std::endl;
 	}
 
 	// assign by string

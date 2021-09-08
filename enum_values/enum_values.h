@@ -1,99 +1,125 @@
 #pragma once
 #include <unordered_map>
+#include <array>
 #include "spliterator.h"
-template<class _ETy>
-requires std::is_enum_v<_ETy>
+
+template<typename ETy, typename UTy = std::underlying_type_t<ETy>>
+struct data_pair
+{
+	ETy value;
+	std::string_view name;
+
+	UTy as_number()
+	{
+		return static_cast<UTy>(value);
+	}
+
+	std::string as_string()
+	{
+		return std::string(name);
+	}
+};
+
+template<typename T> struct enum_data;
+
+#include "enum_data.h"
+
+template<class ETy>
+concept has_enum_data =
+requires()
+{
+	enum_data<ETy>::get_data();
+	enum_data<ETy>::get_desc();
+};
+
+template<class ETy>
+requires std::is_enum_v<ETy> && has_enum_data<ETy>
 class enum_static
 {
 public:
-	using _UTy = std::underlying_type_t<_ETy>; // underlying type
+	using UTy = std::underlying_type_t<ETy>; // underlying type
+	using data_pair_t = data_pair<ETy>;
 
 private:
-	static const std::unordered_map<_UTy, std::string> value_to_name;
-	static const std::unordered_map<std::string, _UTy> name_to_value;
-	static const std::string enum_desc;
+	static constexpr auto desc = enum_data<ETy>::get_desc();
+	static constexpr auto data = enum_data<ETy>::get_data();
 
 public:
-
-	static const auto iterable_by_values()
+	static constexpr auto iterable()
 	{
-		return value_to_name;
+		return data;
 	}
 
-	static const auto iterable_by_names()
+	static constexpr std::string description()
 	{
-		return value_to_name;
+		return desc;
 	}
 
-	static const auto description()
+	static constexpr ETy flag_set(ETy value, ETy flag)
 	{
-		return enum_desc;
+		return static_cast<ETy>(static_cast<UTy>(value) | static_cast<UTy>(flag));
 	}
 
-	static _ETy flag_set(_ETy value, _ETy flag)
+	static constexpr ETy flag_remove(ETy value, ETy flag)
 	{
-		return static_cast<_UTy>(value) | static_cast<_UTy>(flag);
+		return static_cast<ETy>(static_cast<UTy>(value) & ~static_cast<UTy>(flag));
 	}
 
-	static _ETy flag_remove(_ETy value, _ETy flag)
+	static constexpr ETy flag_toggle(ETy value, ETy flag)
 	{
-		return static_cast<_UTy>(value) & ~static_cast<_UTy>(flag);
-	}
-
-	static _ETy flag_toggle(_ETy value, _ETy flag)
-	{
-		return static_cast<_UTy>(value) ^ static_cast<_UTy>(flag);
+		return static_cast<ETy>(static_cast<UTy>(value) ^ static_cast<UTy>(flag));
 	}
 
 	template<typename Ty>
-	requires std::is_same_v<_ETy, Ty> || std::is_same_v<_UTy, Ty>
-		static bool has_flag(Ty value, _UTy other)
+	requires std::is_same_v<ETy, Ty> || std::is_same_v<UTy, Ty>
+		static constexpr bool has_flag(Ty value, UTy other)
 	{
-		return (static_cast<_UTy>(value) & other) == other;
+		return (static_cast<UTy>(value) & other) == other;
 	}
 
 	template<typename Ty>
-	requires std::is_same_v<_ETy, Ty> || std::is_same_v<_UTy, Ty>
-		static bool has_flag(Ty value, _ETy other)
+	requires std::is_same_v<ETy, Ty> || std::is_same_v<UTy, Ty>
+		static constexpr bool has_flag(Ty value, ETy other)
 	{
-		return has_flag(static_cast<_UTy>(value), static_cast<_UTy>(other));
+		return has_flag(static_cast<UTy>(value), static_cast<UTy>(other));
 	}
 
 	template<typename Ty>
-	requires std::is_same_v<_ETy, Ty> || std::is_same_v<_UTy, Ty>
-		static std::string to_string(Ty value)
+	requires std::is_same_v<ETy, Ty> || std::is_same_v<UTy, Ty>
+		static constexpr std::string to_string(Ty value)
 	{
-		auto iter = value_to_name.find(static_cast<_UTy>(value));
-		if (iter == value_to_name.end())
+		auto fn = [&value](const auto& pair) { return static_cast<UTy>(pair.value) == static_cast<UTy>(value); };
+		auto iter = std::find_if(data.begin(), data.end(), fn);
+		if (iter == data.end())
 		{
 			return std::string();
 		}
-		return iter->second;
+		return std::string(iter->name);
 	}
 
 	template<typename Ty>
-	requires std::is_same_v<_ETy, Ty> || std::is_same_v<_UTy, Ty>
-		static bool from_string(Ty & value, const std::string & text)
+	requires std::is_same_v<ETy, Ty> || std::is_same_v<UTy, Ty>
+		static constexpr bool from_string(Ty & value, const std::string & text)
 	{
-		auto iter = name_to_value.find(text);
-		if (iter == name_to_value.end())
+		auto iter = std::find_if(data.begin(), data.end(), [&text](const auto& pair) { return pair.name == text; });
+		if (iter == data.end())
 		{
 			return false;
 		}
-		value = static_cast<Ty>(iter->second);
+		value = static_cast<UTy>(iter->value);
 		return true;
 	}
 
 	template<typename Ty>
-	requires std::is_same_v<_ETy, Ty> || std::is_same_v<_UTy, Ty>
-		static std::string to_flag_string(Ty value, const std::string & separator)
+	requires std::is_same_v<ETy, Ty> || std::is_same_v<UTy, Ty>
+		static constexpr std::string to_flag_string(Ty value, const std::string & separator)
 	{
 		std::string s;
-		for (auto& p : value_to_name)
+		for (auto& p : data)
 		{
-			if (has_flag(value, p.first))
+			if (has_flag(value, p.value))
 			{
-				s.append(p.second).append(separator);
+				s.append(std::string(p.name)).append(separator);
 			}
 		}
 
@@ -106,8 +132,8 @@ public:
 	}
 
 	template<typename Ty>
-	requires std::is_same_v<_ETy, Ty> || std::is_same_v<_UTy, Ty>
-		static std::string from_flag_string(Ty & value, const std::string & text, const std::string & separator)
+	requires std::is_same_v<ETy, Ty> || std::is_same_v<UTy, Ty>
+		static constexpr std::string from_flag_string(Ty & value, const std::string & text, const std::string & separator)
 	{
 		spliterator splitter(text, separator);
 		value = static_cast<Ty>(0);
@@ -115,14 +141,14 @@ public:
 		std::string_view part;
 		while (splitter.next(part))
 		{
-			auto iter = name_to_value.find(std::string(part));
-			if (iter == name_to_value.end())
+			auto iter = std::find_if(data.begin(), data.end(), [&part](const auto& pair) { return pair.name == part; });
+			if (iter == data.end())
 			{
 				unknowns.append(part).append(separator);
 			}
 			else
 			{
-				value = value + static_cast<Ty>(iter->second);
+				value = value + static_cast<UTy>(iter->value);
 			}
 		}
 
@@ -135,20 +161,20 @@ public:
 	}
 };
 
-template<class _ETy, _ETy _first_value = static_cast<_ETy>(0), _ETy _last_value = static_cast<_ETy>(0)>
-requires std::is_enum_v<_ETy>
+template<class ETy, ETy _first_value = static_cast<ETy>(0), ETy _last_value = static_cast<ETy>(0)>
+requires std::is_enum_v<ETy>
 class enum_value
 {
 public:
-	using _UTy = std::underlying_type_t<_ETy>;
+	using UTy = std::underlying_type_t<ETy>;
 
 protected:
-	_UTy _value;
+	UTy _value;
 
 public:
 	void clear()
 	{
-		_value = static_cast<_UTy>(0);
+		_value = static_cast<UTy>(0);
 	}
 
 	enum_value()
@@ -156,31 +182,31 @@ public:
 		clear();
 	}
 
-	enum_value(_ETy value)
-		: _value(static_cast<_UTy>(value))
+	enum_value(ETy value)
+		: _value(static_cast<UTy>(value))
 	{
 	}
 
-	explicit enum_value(_UTy value)
+	explicit enum_value(UTy value)
 		: _value(value)
 	{
 	}
 
 	template<typename Ty>
-	requires std::is_same_v<_ETy, Ty> || std::is_same_v<_UTy, Ty>
+	requires std::is_same_v<ETy, Ty> || std::is_same_v<UTy, Ty>
 		bool has_flag(enum_value other) const
 	{
 		return (_value & other._value) == other._value;
 	}
 
-	bool has_flag(_UTy other) const
+	bool has_flag(UTy other) const
 	{
-		return enum_static<_ETy>::has_flag(_value, other);
+		return enum_static<ETy>::has_flag(_value, other);
 	}
 
-	bool has_flag(_ETy other) const
+	bool has_flag(ETy other) const
 	{
-		return enum_static<_ETy>::has_flag(other, static_cast<_UTy>(other));
+		return enum_static<ETy>::has_flag(other, static_cast<UTy>(other));
 	}
 
 	enum_value& operator=(const enum_value& other)
@@ -199,19 +225,19 @@ public:
 		return _value != other._value;
 	}
 
-	void flag_set(_ETy flag)
+	void flag_set(ETy flag)
 	{
-		_value = enum_static<_ETy>::flag_set(_value, flag);
+		_value = enum_static<ETy>::flag_set(_value, flag);
 	}
 
-	void flag_remove(_ETy flag)
+	void flag_remove(ETy flag)
 	{
-		_value = enum_static<_ETy>::flag_remove(_value, flag);
+		_value = enum_static<ETy>::flag_remove(_value, flag);
 	}
 
-	void flag_toggle(_ETy flag)
+	void flag_toggle(ETy flag)
 	{
-		_value = enum_static<_ETy>::flag_toggle(_value, flag);
+		_value = enum_static<ETy>::flag_toggle(_value, flag);
 	}
 
 	enum_value& operator++()
@@ -240,48 +266,48 @@ public:
 		return *temp;
 	}
 
-	_ETy operator*() const
+	ETy operator*() const
 	{
-		return static_cast<_ETy>(_value);
+		return static_cast<ETy>(_value);
 	}
 
-	_ETy& operator*()
+	ETy& operator*()
 	{
-		return *reinterpret_cast<_ETy*>(&_value);
+		return *reinterpret_cast<ETy*>(&_value);
 	}
 
-	_UTy& operator&()
-	{
-		return _value;
-	}
-
-	_UTy& data()
+	UTy& operator&()
 	{
 		return _value;
 	}
 
-	_UTy data() const
+	UTy& data()
+	{
+		return _value;
+	}
+
+	UTy data() const
 	{
 		return _value;
 	}
 
 	std::string to_string() const
 	{
-		return enum_static<_ETy>::to_string(_value);
+		return enum_static<ETy>::to_string(_value);
 	}
 
 	bool from_string(const std::string& text)
 	{
-		return enum_static<_ETy>::from_string(_value, text);
+		return enum_static<ETy>::from_string(_value, text);
 	}
 
 	std::string to_flag_string(const std::string& separator) const
 	{
-		return enum_static<_ETy>::to_flag_string(_value, separator);
+		return enum_static<ETy>::to_flag_string(_value, separator);
 	}
 
 	std::string from_flag_string(const std::string& text, const std::string& separator)
 	{
-		return enum_static<_ETy>::from_flag_string(_value, text, separator);
+		return enum_static<ETy>::from_flag_string(_value, text, separator);
 	}
 };
