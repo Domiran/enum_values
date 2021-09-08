@@ -1,6 +1,8 @@
 # enum_values
 Yet another post-build step and class to bring reflection to C++ enumerations!
 
+*Fair warning: this project has not undergone much testing (yet?). I have also not used it in a project (also yet?).*
+
 # Description
 
 This project consists of two parts: a pre-build step called `enum_reader` and two classes: `enum_value` and `enum_static`.
@@ -24,9 +26,7 @@ namespace MyNamespace
 }
 ```
 
-It does this by creating a compilable cpp file intended to be included directly in your application that are linked to the `enum_value` and `enum_static` classes. Forward declarations of all enums it captures are included.
-
-# Example
+It does this by creating a compilable cpp file intended to be included directly in your application that are linked to the `enum_value` and `enum_static` classes. Forward declarations of all enums it captures are included. Which one you use ~~really depends if you prefer a little C# in your life~~ is a matter of preference.
 
 The above `enum` will result in a file with the following contents:
 
@@ -56,9 +56,13 @@ const std::unordered_map<std::string, int> enum_static<MyNamespace::theirvalues>
 };
 ```
 
+Unlike some other enum reflection solutions, this does not require much/any editing of your existing code and has no size or syntax limitations. (However, its effectiveness is entirely dependent on the parser. The initial release does not have a very robust C++ syntax parser.)
+
 # Usage
 
-`enum_static` contains static versions of common enum operations:
+There are two methods of using *enum_values*: the static `enum_static` class or the enum wrapper `enum_value`.
+
+`enum_static` provides static versions of common enum operations:
 * `has_flag`
 * `flag_set`
 * `flag_remove`
@@ -75,7 +79,9 @@ const std::unordered_map<std::string, int> enum_static<MyNamespace::theirvalues>
 * `enum_value` assignment and equality
 * Postfix and prefix increment and decrement
 * Overloaded `operator*`, returning enum value (non-const overload allows value to be directly changed)
-* `data()`, returning the value of the enum's underlying type (non-const overload allows value to be directly changed)
+* `data()`, returning the value of the enum's underlying type (non-const overload allows value to be directly changed
+
+The following code shows most of the features used as member functions.
 
 ```cpp
 // these values are used by those values, top kek!
@@ -121,7 +127,7 @@ namespace espace
 std::cout << enum_static<myvalues>::description() << std::endl;
 std::cout << enum_static<espace::theirvalues>::description() << std::endl;
 
-// using the enum_value class to hold values (useful for flags
+// using the enum_value class to hold values (useful for flags)
 enum_value<myvalues> val1;
 enum_value<myvalues> val2;
 
@@ -184,6 +190,9 @@ foo(*val1);
 # Limitations
 
 The parser currently has the following limitations:
-* Any and all classes and namespaces required for a forward declaration are ignored. (Provide this information manually with the `//@ns` comment in the format shown.)
+* Any and all classes and namespaces required for a forward declaration are ignored.
+  * (Provide this information manually with the `//@ns` comment in the format shown.)
 * An alias will return the first value seen in the enum definition.
+  * (There does not seem to be any way in C++ to differentiate aliases from the enum value.)
 * Only single-term expressions will be evaluated. `two_and_three = two | three` will currently set the value to `-1`.
+  * (Eventually.)
