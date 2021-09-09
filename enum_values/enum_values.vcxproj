@@ -154,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="enum_values.h" />
+    <ClInclude Include="enum_values_tester.h" />
     <ClInclude Include="spliterator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

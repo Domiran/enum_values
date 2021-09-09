@@ -16,8 +16,9 @@ namespace enum_reader
 
     struct stuff
     {
-        std::vector<enum_data> found_enums;
-        std::string nspace;
+        std::vector<enum_data> found_enums; // all the enums we found
+        std::string nspace; // the namespace this enum is in
+        std::vector<std::string> exclude_enums;
     };
 
     std::string get_and_destroy(CXString s)
@@ -44,6 +45,12 @@ namespace enum_reader
         {
             out_name = alt_name.substr(2, alt_name.size() - 4);
         }
+    }
+
+    bool is_excluded(enum_data const& data, std::vector<std::string> const& exclude_enums)
+    {
+        auto iter = std::find_if(exclude_enums.begin(), exclude_enums.end(), [&data](std::string const& full_name) { return full_name == data.get_name(); });
+        return iter != exclude_enums.end();
     }
 
     bool is_in_namespace(CXCursor c, std::string const& nspace, std::string& out_prefix, bool ok = false)
@@ -84,9 +91,8 @@ namespace enum_reader
         e.name = name;
         trim(e.name);
         e.desc = cmt;
-        trim_comment(e.desc);
+        sanitize_comment(e.desc);
 
-        std::cout << "[Enum] Found enum " << prefix << name << std::endl;
 
         auto value_visitor = [](CXCursor c, [[maybe_unused]] CXCursor parent, CXClientData client_data)
         {
@@ -112,7 +118,7 @@ namespace enum_reader
         return e;
     }
 
-	std::vector<enum_data> get_enums_in_file(std::string const& file, std::string const& in_nspace)
+	std::vector<enum_data> get_enums_in_file(std::string const& file, std::string const& in_nspace, std::vector<std::string> const& exclude_enums)
 	{
         std::vector<enum_data> result;
         auto options = CXTranslationUnit_SkipFunctionBodies | CXTranslationUnit_IncludeBriefCommentsInCodeCompletion;
@@ -126,11 +132,11 @@ namespace enum_reader
 
         if (unit == nullptr)
         {
-            std::cerr << "[LibClang] Can't parse file " << file << ". Ensure all files are compilable." << std::endl;
+            std::cerr << "\t[LibClang] Can't parse file " << file << ". Ensure all files are compilable." << std::endl;
             exit(-1);
         }
 
-        stuff s{ {}, in_nspace };
+        stuff s{ {}, in_nspace, exclude_enums };
 
         auto cursor = clang_getTranslationUnitCursor(unit);
         auto enum_visitor = [](CXCursor c, [[maybe_unused]] CXCursor parent, CXClientData client_data)
@@ -139,13 +145,26 @@ namespace enum_reader
             auto loc = clang_getCursorLocation(c);
             if(!clang_Location_isInSystemHeader(loc))
             {
-                if (clang_getCursorKind(c) == CXCursorKind::CXCursor_EnumDecl)
+                auto kind = clang_getCursorKind(c);
+                if (kind == CXCursorKind::CXCursor_EnumDecl)
                 {
                     std::string prefix;
                     if (is_in_namespace(c, data.nspace, prefix))
                     {
-                        data.found_enums.push_back(get_enum_data(c, prefix));
-                        std::cout << "[Enum] Found enum " << prefix << data.found_enums.back().name << std::endl;
+                        auto e = get_enum_data(c, prefix);
+                        if (!is_excluded(e, data.exclude_enums))
+                        {
+                            data.found_enums.push_back(e);
+                            std::cout << "\t[Enum] Found enum " << e.get_name() << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << "\t[Enum] * Skipped enum " << e.get_name() << " (exclude)" << std::endl;
+                        }
+                    }
+                    else
+                    {
+                        std::cout << "\t[Enum] * Skipped an enum in " << prefix << " (namespace)" << std::endl;
                     }
                 }
             }

@@ -37,56 +37,86 @@ std::string get_named_arg_value(std::vector<std::string> const& args, std::strin
     return std::string();
 }
 
+std::vector<std::string> get_named_arg_value_array(std::vector<std::string> const& args, std::string const& name)
+{
+    std::vector<std::string> values;
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        if ((args[i] == name && ((i + 1 < args.size()))))
+        {
+            for (auto value_i = i + 1; value_i < args.size(); value_i++)
+            {
+                if (args[value_i].starts_with("-"))
+                {
+                    return values;
+                }
+                values.push_back(args[value_i]);
+            }
+        }
+    }
+    return values;
+}
+
+std::string get_out_file(size_t include_position, std::string const& cpp_text)
+{
+    /*
+    We do this instead of as part of clang parsing because the file may not
+    exist. In that case, clang won't tell us the file.
+    */
+    auto beginQuote = cpp_text.find('\"', include_position);
+    auto endQuote = cpp_text.find('\"', beginQuote + 1);
+    auto out_file = cpp_text.substr(beginQuote + 1, endQuote - beginQuote - 1);
+    return out_file;
+}
+
 int main(int argc, char** argv)
 {
     std::vector<std::string> args(argv, argv + argc);
 
-    auto code_path = get_named_arg_value(args, "-indir");
-    auto out_file = get_named_arg_value(args, "-outfile");
+    auto code_file = get_named_arg_value(args, "-in");
     auto nspace = get_named_arg_value(args, "-nspace");
+    auto exclude_enums = get_named_arg_value_array(args, "-exclude");
 
-    std::vector<enum_reader::enum_data> all_enums;
-    std::vector<std::string> all_enum_maps;
+    std::cout << "[General] Reading file \"" << code_file << "\"\n";
 
-    std::string all_files;
+    std::filesystem::directory_entry entry(code_file);
 
-    for (auto& entry : std::filesystem::directory_iterator(code_path))
+    if (entry.is_regular_file() && (entry.path().extension().string().ends_with(".cpp")))
     {
-        /*if (entry.is_regular_file() && (!entry.path().string().ends_with("enum_data.h")) && entry.path().extension().string().ends_with(".cpp"))
+        auto cpp_text = read_file(entry.path().string());
+        auto include_position = cpp_text.find("#include \"enum_values_");
+        if (include_position != std::string::npos)
         {
-            all_files.append(entry.path().string()).append(" ");
-        }*/
+            std::cout << "[General] Enums in namespace \"" << nspace << "\"\n" << std::endl;
+            auto out_file = get_out_file(include_position, cpp_text);
+            std::cout << "[Parse] Opening " << entry.path().string() << "... " << std::endl;
+            auto file_enum_data = get_enums_in_file(entry.path().string(), nspace, exclude_enums);
+            std::cout << "\t[Enum] Found " << file_enum_data.size() << std::endl;
 
-        if (entry.is_regular_file() && (!entry.path().string().ends_with("enum_data.h")) &&
-            (entry.path().extension().string().ends_with(".cpp") || entry.path().extension().string().ends_with(".h")))
-        {
-            std::cout << "[Source] Opening " << entry.path().string() << "." << std::endl;
-            auto cpp_text = read_file(entry.path().string());
-
-            auto pos = cpp_text.find("enum class ");
-            if (pos != std::string::npos)
+            if (!file_enum_data.empty())
             {
-                auto file_enum_data = get_enums_in_file(entry.path().string(), nspace);
-
-
-
-                /*std::cout << "[Enum] Reading enums, ";
-                auto file_enum_data = get_file_enum_data(cpp_text);
-                std::cout << " found " << file_enum_data.size() << "." << std::endl;
-                */
-                std::cout << "[Map] Creating map text";
+                std::cout << "[Map] Creating map text... ";
                 auto map_text = create_enums_maps(file_enum_data);
-                all_enum_maps.insert(all_enum_maps.end(), map_text.begin(), map_text.end());
-                std::cout << ".\n" << std::endl;
+                std::cout << "done." << std::endl;
+
+                auto out_path = entry.path().parent_path().string() + "/" + out_file;
+                std::cout << "[Out] Creating out file (" << out_path << ")... ";
+                auto out_file_text = create_out_file_text(map_text);
+                write_file(out_path, out_file_text);
+                std::cout << "done.\n" << std::endl;
             }
         }
+        else
+        {
+            std::cout << "[General] File does not contain #include \"enum_values_...\"" << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << "[General] Cannot find file, not a file or not a cpp file" << std::endl;
     }
 
-    std::cout << "[Out] Creating out file";
-    auto out_file_text = create_out_file_text(all_enum_maps);
-    std::cout << ".\n" << std::endl;
-
-    write_file(out_file, out_file_text);
+    std::cout << "[General] All done!" << std::endl;
 
     return 0;
 }

@@ -32,5 +32,8 @@
     <ClInclude Include="enum_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="enum_values_tester.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

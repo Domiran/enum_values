@@ -45,4 +45,9 @@ namespace enum_reader
     {
         return prefix + name + "::" + values.at(i).symbol;
     }
+    
+    bool enum_data::empty() const
+    {
+        return values.empty();
+    }
 }

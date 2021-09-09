@@ -22,5 +22,6 @@ namespace enum_reader
         size_t size() const;
         std::string get_value_symbol(size_t i) const;
         std::string get_value_name(size_t i) const;
+        bool empty() const;
     };
 }

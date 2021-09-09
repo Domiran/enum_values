@@ -92,7 +92,7 @@ namespace enum_reader
         return static_cast<int>(e - b) + 1;
     }
 
-    void trim_comment(std::string& comment)
+    void sanitize_comment(std::string& comment)
     {
         if (comment.empty())
             return;
@@ -104,6 +104,9 @@ namespace enum_reader
             comment = comment.substr(0, endcomment);
         }
         trim(comment);
+        replace(comment, "\r\n", "\r\n");
+        replace(comment, "\n", "\r");
+        replace(comment, "\r", "\\\r");
     }
 
 

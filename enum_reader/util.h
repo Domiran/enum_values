@@ -21,7 +21,7 @@ namespace enum_reader
     void trim(std::string& s);
     void replace(std::string& source, std::string const& find, std::string const& replaceWith);
     int trim_size(std::string_view const& s);
-    void trim_comment(std::string& comment);
+    void sanitize_comment(std::string& comment);
 
     std::string read_file(std::string const& path);
     bool write_file(std::string const& path, std::string const& text);
