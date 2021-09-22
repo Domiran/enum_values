@@ -1,7 +1,12 @@
 #pragma once
 #include <unordered_map>
 #include <array>
+
+#define SPLIT_FUNC
+
+#ifdef SPLIT_FUNC
 #include "spliterator.h"
+#endif
 
 template<typename ETy, typename UTy = std::underlying_type_t<ETy>>
 struct data_pair
@@ -20,9 +25,7 @@ struct data_pair
 	}
 };
 
-template<typename T> struct enum_data;
-
-#include "enum_data.h"
+template<typename T> class enum_data;
 
 template<class ETy>
 concept has_enum_data =
@@ -131,6 +134,7 @@ public:
 		return s;
 	}
 
+#ifdef SPLIT_FUNC
 	template<typename Ty>
 	requires std::is_same_v<ETy, Ty> || std::is_same_v<UTy, Ty>
 		static constexpr std::string from_flag_string(Ty & value, const std::string & text, const std::string & separator)
@@ -159,6 +163,7 @@ public:
 
 		return unknowns;
 	}
+#endif
 };
 
 template<class ETy, ETy _first_value = static_cast<ETy>(0), ETy _last_value = static_cast<ETy>(0)>
@@ -306,8 +311,10 @@ public:
 		return enum_static<ETy>::to_flag_string(_value, separator);
 	}
 
+#ifdef SPLIT_FUNC
 	std::string from_flag_string(const std::string& text, const std::string& separator)
 	{
 		return enum_static<ETy>::from_flag_string(_value, text, separator);
 	}
+#endif
 };

@@ -9,6 +9,8 @@
 #include "data.h"
 #include "clang.h"
 
+extern bool verbose_messages;
+
 namespace enum_reader
 {
     extern std::regex enum_values_comment_reg;
@@ -155,16 +157,19 @@ namespace enum_reader
                         if (!is_excluded(e, data.exclude_enums))
                         {
                             data.found_enums.push_back(e);
-                            std::cout << "\t[Enum] Found enum " << e.get_name() << std::endl;
+                            if (verbose_messages)
+                                std::cout << "\t[Enum] Found enum " << e.get_name() << std::endl;
                         }
                         else
                         {
-                            std::cout << "\t[Enum] * Skipped enum " << e.get_name() << " (exclude)" << std::endl;
+                            if (verbose_messages)
+                                std::cout << "\t[Enum] * Skipped enum " << e.get_name() << " (exclude)" << std::endl;
                         }
                     }
                     else
                     {
-                        std::cout << "\t[Enum] * Skipped an enum in " << prefix << " (namespace)" << std::endl;
+                        if (verbose_messages)
+                            std::cout << "\t[Enum] * Skipped an enum in " << prefix << " (namespace)" << std::endl;
                     }
                 }
             }

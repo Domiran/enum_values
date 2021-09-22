@@ -3,7 +3,6 @@
 #include <iostream>
 #include <string>
 #include <string_view>
-//#include "enum_values_tester.h"
 
 namespace tester_ns
 {
@@ -53,7 +52,7 @@ namespace tester_ns
 		};
 	}
 }
-
+#include "enum_values_tester.h"
 #include "enum_values.h"
 
 using namespace tester_ns;

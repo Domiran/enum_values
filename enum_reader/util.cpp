@@ -109,6 +109,18 @@ namespace enum_reader
         replace(comment, "\r", "\\\r");
     }
 
+    std::string remove_quotes(std::string text)
+    {
+        size_t start = 0U;
+        size_t end = text.size();
+        if (text.starts_with("\""))
+            start++;
+        if (text.ends_with("\""))
+            end--;
+
+        return text.substr(start, end - start);
+    }
+
 
     std::string read_file(std::string const& path)
     {

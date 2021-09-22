@@ -23,6 +23,8 @@ namespace enum_reader
     int trim_size(std::string_view const& s);
     void sanitize_comment(std::string& comment);
 
+    std::string remove_quotes(std::string text);
+
     std::string read_file(std::string const& path);
     bool write_file(std::string const& path, std::string const& text);
 };
