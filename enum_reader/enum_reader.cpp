@@ -252,37 +252,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-
-void blah()
-{
-    int age;
-    int choice;
-    if (age < 21)
-    {
-        switch (choice)
-        {
-        case 'S': std::cout << "You have picked vegetable juice for your steak\n";
-            break;
-        case 'T': std::cout << "You have picked cranberry juice for your trout\n";
-            break;
-        case 'B': std::cout << "You have picked soda for your burger\n";
-            break;
-        default:
-            std::cout << "Invalid menu selection\n";
-        }
-    }
-    else
-    {
-        switch (choice)
-        {
-        case 'S':
-            std::cout << "You have picked cabernet for your steak\n";
-            break;
-        case 'T': std::cout << " You have picked chardonnay for your trout\n";
-            break;
-        case 'B': std::cout << "You have picked IPA for burger\n";
-            break;
-        default: std::cout << "Invalid menu selection\n";
-        }
-    }
-}
